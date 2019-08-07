@@ -6,8 +6,11 @@ import java.nio.file.Files;
 import static java.nio.file.StandardCopyOption.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,7 +30,6 @@ import javax.servlet.annotation.WebListener;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -37,9 +39,10 @@ public class ContextListener implements ServletContextListener{
 
 	Timer timer = new Timer();
 	private boolean stopping = false;
-    static Statement stmt;
-    static Connection c;
-    int proccesing = 0;
+    private Statement stmt;
+    private Connection c;
+    private int proccesing = 0;
+    Date lastTime;
 	
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
@@ -54,6 +57,8 @@ public class ContextListener implements ServletContextListener{
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
             System.exit(0);
          }
+		
+		getLastTimeIfExists();
 		
 		new Thread(new Runnable() {
 			@Override
@@ -70,6 +75,27 @@ public class ContextListener implements ServletContextListener{
 				}, 0, 15000);
 			}
 		}).run();		
+	}
+
+	private void getLastTimeIfExists() {
+		
+		String sql = "select * from data order by \"Date\" DESC, \"EndTime\" DESC";
+		try {
+			ResultSet rs = stmt.executeQuery(sql);
+			
+			if(!rs.next()) {
+				return;
+			}else {
+				Date date = rs.getDate("Date");
+				Time time = rs.getTime("EndTime");
+				lastTime = new Date(date.getYear(), date.getMonth(),
+						date.getDate(), time.getHours(), time.getMinutes(),
+						time.getSeconds());
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -89,6 +115,9 @@ public class ContextListener implements ServletContextListener{
 	
 	private void checkAndUpdate() {
         System.out.println("listening");
+        if (lastTime != null) {
+			System.out.println(lastTime.toString());
+		}
 		if (stopping) {
 			timer.cancel();
 		} else {
@@ -124,6 +153,15 @@ public class ContextListener implements ServletContextListener{
 			System.out.println("processing");
 			proccesing++;
 		}
+    	Date checkDate = e.getDate();
+    	checkDate.setHours(e.getEndTime().getHour());
+    	checkDate.setMinutes(e.getEndTime().getMinute());
+    	checkDate.setSeconds(e.getEndTime().getSecond());
+
+    	if (e.getDate().compareTo(lastTime) <= 0) {
+    		System.out.println("to early");
+			return;
+		}
         
         String sql = "INSERT INTO data (\"CamName\",\"Date\",\"StartTime\",\"EndTime\","
         +" \"TotalIn\", \"totalout\", \"personsin\","
@@ -143,7 +181,7 @@ public class ContextListener implements ServletContextListener{
 
 	private int skipFirst = 0;
     private int substingCounter = 1;
-    private boolean stop;
+    private boolean stop = false, makeTime = false;
 	private Collection<Entry> getEntrys(String fileName){
 		List<Entry> entrys = new ArrayList<Entry>();
         System.out.println("getering");
@@ -176,6 +214,11 @@ public class ContextListener implements ServletContextListener{
         	
         	if (!stop && skipFirst != 0) {
         		
+        		if (lastTime == null) {
+					lastTime = new Date();
+					makeTime = true;
+				}
+        		
                 row.forEach(cell -> {
             		String cellValue = dataFormatter.formatCellValue(cell);
             		if (substingCounter == 1) {
@@ -187,6 +230,11 @@ public class ContextListener implements ServletContextListener{
             				String date = cellValue.substring(0, 10);
             				ddate = format.parse(date);
             				entry.setDate(ddate);
+            				if (makeTime) {
+                				lastTime.setYear(ddate.getYear());
+                				lastTime.setMonth(ddate.getMonth());
+                				lastTime.setDate(ddate.getDate());
+							}
             			} catch (ParseException e) {
             				e.printStackTrace();
             			}
@@ -194,6 +242,11 @@ public class ContextListener implements ServletContextListener{
             			String time = cellValue.substring(11, 19);
             			LocalTime t = LocalTime.parse(time) ;
             			entry.setEndTime(t);
+            			if (makeTime) {
+							lastTime.setHours(t.getHour());
+							lastTime.setMinutes(t.getMinute());
+							lastTime.setSeconds(t.getSecond());
+						}
             			t = t.minusHours(1);
             			entry.setStartTime(t);
             		}else if (substingCounter == 4) {
@@ -231,6 +284,7 @@ public class ContextListener implements ServletContextListener{
         System.out.println("moving");
         proccesing--;
         stop = false;
+        makeTime = false;
         
 		File file = new File("xls/"+fileName);
 		File newFile = new File("backup/xls/"+fileName);
