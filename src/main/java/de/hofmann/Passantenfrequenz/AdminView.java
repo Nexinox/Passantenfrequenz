@@ -48,12 +48,12 @@ import org.json.simple.parser.ParseException;
 public class AdminView extends VerticalLayout implements View {
 
 	private static final long serialVersionUID = 1L;
-	
-	BufferedImage bi;
-	Graphics2D drawable;
-    public static final String VIEW_NAME = "admin";
+
+	private BufferedImage bi;
+	private Graphics2D drawable;
+    static final String VIEW_NAME = "admin";
 	private int clicks = 0;
-	List<Camera> Cameras = new ArrayList<Camera>();
+	private List<Camera> Cameras = new ArrayList<Camera>();
 	private boolean exists = false;
 	private Image image;
 	private Camera camera;
@@ -61,37 +61,33 @@ public class AdminView extends VerticalLayout implements View {
     @SuppressWarnings("unchecked")
 	@Override
     public void enter(ViewChangeListener.ViewChangeEvent viewChangeEvent) {
-    	
+
     	readJson();
-    	
+
     	image = new Image();
     	HorizontalLayout imageWrapper = new HorizontalLayout(image);
-    	
+
     	ImageUploader receiver = new ImageUploader();
-    	
+
 	    Upload upload = new Upload("Bild Hochladen", receiver);
-	    
+
         Button saveBtn = new Button("Spechern");
-        
-        
-    	
+
+
+
         File rsc = new File("rsc/");
         if(!rsc.exists()) {
         	rsc.mkdir();
         }
-        
+
         File[] files = new File("rsc/").listFiles(new FilenameFilter() {
-        	@Override 
-        	public boolean accept(File dir, String name) { 
-        		if(name.endsWith(".png") || name.endsWith(".PNG")) {
-        			return true;
-        		}else {
-        			return false;
-        		}
-        		
+        	@Override
+        	public boolean accept(File dir, String name) {
+                return name.endsWith(".png") || name.endsWith(".PNG");
+
         	}
         });
-          
+
         if(files != null) {
 	        for(File file : files) {
 	        	if(file.isFile()) {
@@ -106,11 +102,11 @@ public class AdminView extends VerticalLayout implements View {
 	    			}
 	        	}
 	        }
-        }	    
-	    
+        }
+
 	    image.addClickListener(e -> {
 	    	clicks++;
-	    	
+
 	    	Cameras.forEach(cam->{
 	    		int dist = (int) Math.sqrt((e.getRelativeX()-cam.getX())*(e.getRelativeX()-cam.getX()) + (e.getRelativeY()-cam.getY())*(e.getRelativeY()-cam.getY()));
 	    		if(dist <= 5) {
@@ -118,7 +114,7 @@ public class AdminView extends VerticalLayout implements View {
 	    			exists = true;
 	    		}
 	    	});
-	    	
+
 	    	if(!exists) {
 	    		camera = new Camera();
 		    	camera.setName("Kamera" + Integer.toString(clicks));
@@ -127,7 +123,7 @@ public class AdminView extends VerticalLayout implements View {
 
 		    	Cameras.add(camera);
 	    	}
-	    	
+
 	    	VerticalLayout settingsWrapper = new VerticalLayout();
 	    	TextField camName = new TextField("Name");
 	    	camName.setValue(camera.getName());
@@ -142,37 +138,37 @@ public class AdminView extends VerticalLayout implements View {
 	    		updateImage();
 	    	});
 	    	settingsWrapper.addComponents(camName,save,delete);
-	    	
-	    	
-	    	
+
+
+
 	    	imageWrapper.addComponent(settingsWrapper);
 	    	exists = false;
 	    	updateImage();
-	    });	   
-	    
+	    });
+
 	    saveBtn.addClickListener(click -> {
-	    	
+
 	    	JSONArray cameraArray = new JSONArray();
-	    	
-	    	
+
+
 	        Cameras.forEach(camera ->{
-	        	
+
 	        	JSONObject cameraObject = new JSONObject();
-	        	
+
 	        	JSONObject cameraDetails = new JSONObject();
-	        	
+
 	        	cameraDetails.put("name", camera.getName());
 	        	cameraDetails.put("x", camera.getX());
 	        	cameraDetails.put("y", camera.getY());
-	        	
+
 	        	cameraObject.put("camera", cameraDetails);
-	        	
+
 	        	cameraArray.add(cameraObject);
-	        	
+
 	        });
-	    	
+
 	        try (FileWriter file = new FileWriter("cameras.json")) {
-	 
+
 	            file.write(cameraArray.toJSONString());
 	            file.flush();
 	            file.close();
@@ -180,59 +176,55 @@ public class AdminView extends VerticalLayout implements View {
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	        }
-	    	
+
 	    });
-	   
-        
+
+
 	    upload.addSucceededListener(receiver);
-	    
+
 	    addComponents(upload, imageWrapper, saveBtn);
     }
-    
+
     @SuppressWarnings("unchecked")
 	private void readJson() {
     	 JSONParser jsonParser = new JSONParser();
-         
+
          try (FileReader reader = new FileReader("cameras.json"))
          {
              //Read JSON file
              Object obj = jsonParser.parse(reader);
-  
+
              JSONArray cameraArray = (JSONArray) obj;
-              
+
              //Iterate over employee array
              cameraArray.forEach(cam -> {
-            	 
+
             	 JSONObject cameraObject = (JSONObject) cam;
             	 JSONObject cameraObj = (JSONObject) cameraObject.get("camera");
-            	 
+
             	 Camera camera = new Camera();
             	 camera.setName((String) cameraObj.get("name"));
             	 camera.setX((int) (long) cameraObj.get("x"));
             	 camera.setY((int) (long) cameraObj.get("y"));
             	 Cameras.add(camera);
              });
-  
-         } catch (FileNotFoundException e) {
-             e.printStackTrace();
-         } catch (IOException e) {
-             e.printStackTrace();
-         } catch (ParseException e) {
+
+         } catch (IOException | ParseException e) {
              e.printStackTrace();
          }
-     }
-  
- 
+    }
+
+
 
 	class ImageUploader implements Receiver, SucceededListener {
 		private static final long serialVersionUID = 1L;
 		public OutputStream receiveUpload(String filename,
                                           String mimeType) {
-            
+
 			if(filename.endsWith(".png") || filename.endsWith(".PNG")) {
-	            FileOutputStream fos = null; 
+	            FileOutputStream fos = null;
 	            File[] files = new File("rsc/").listFiles();
-	            	
+
 	            try {
 	                if(files != null) {
 	        	        for(File file : files) {
@@ -244,28 +236,28 @@ public class AdminView extends VerticalLayout implements View {
 	                file = new File("rsc/"+filename);
 	                fos = new FileOutputStream(file);
 	            } catch (final java.io.FileNotFoundException e) {
-	                new Notification("failed", 
+	                new Notification("failed",
 	                				e.getMessage(),
 	                                 Notification.Type.ERROR_MESSAGE)
 	                    .show(Page.getCurrent());
 	                return null;
 	            }
-	            return fos; 
+	            return fos;
 			}else {
-				 new Notification("failed", 
+				 new Notification("failed",
          				"file needs to be .png or .PNG",
                           Notification.Type.ERROR_MESSAGE)
              .show(Page.getCurrent());
 				 return null;
 			}
-			
+
         }
 
         public void uploadSucceeded(SucceededEvent event) {
         	try {
 				bi = ImageIO.read(file);
 				drawable = bi.createGraphics();
-	        	
+
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -275,12 +267,12 @@ public class AdminView extends VerticalLayout implements View {
         }
 
     };
-	void updateImage() {
-		
+	private void updateImage() {
+
 		try {
 			bi = ImageIO.read(file);
 			drawable = bi.createGraphics();
-        	
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -289,28 +281,28 @@ public class AdminView extends VerticalLayout implements View {
 
 	    		drawable.setColor(Color.RED);
 	    		drawable.fillOval(camera.getX()-5,camera.getY()-5,10,10);
-	    		
-	    		
+
+
 		});
-		
+
 		image.setSource(createStreamResource());
 	}
 	private StreamResource createStreamResource() {
 	    return new StreamResource(new StreamSource() {
 			private static final long serialVersionUID = 1L;
-	
+
 			@Override
-	        public InputStream getStream() {  	
+	        public InputStream getStream() {
 	        	try {
 	                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-	                ImageIO.write(bi, "png", bos); 
+	                ImageIO.write(bi, "png", bos);
 	                return new ByteArrayInputStream(bos.toByteArray());
 	            } catch (IOException e) {
 	                e.printStackTrace();
 	                return null;
 	            }
 	        }
-	    }, Integer.toString(clicks) + "temp.png"); 
-	
+	    }, Integer.toString(clicks) + "temp.png");
+
 	}
 }

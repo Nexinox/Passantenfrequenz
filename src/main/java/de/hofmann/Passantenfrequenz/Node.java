@@ -4,16 +4,8 @@ public class Node {
 
 	private int x,y;
 	private String name;
-	private int ID;
 	private int rotationDeg;
 	private int in, out;
-	private boolean drawn;
-	public boolean isDrawn() {
-		return drawn;
-	}
-	public void setDrawn(boolean drawn) {
-		this.drawn = drawn;
-	}
 	public int getIn() {
 		return in;
 	}
@@ -43,12 +35,6 @@ public class Node {
 	}
 	public void setName(String name) {
 		this.name = name;
-	}
-	public int getID() {
-		return ID;
-	}
-	public void setID(int iD) {
-		ID = iD;
 	}
 	public int getRotationDeg() {
 		return rotationDeg;

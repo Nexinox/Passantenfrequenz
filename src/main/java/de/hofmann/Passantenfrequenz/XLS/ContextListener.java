@@ -10,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
-import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,64 +34,62 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 @WebListener
-public class ContextListener implements ServletContextListener{
+public class ContextListener implements ServletContextListener {
 
 	Timer timer = new Timer();
 	private boolean stopping = false;
-    private Statement stmt;
-    private Connection c;
-    private int proccesing = 0;
-    Date lastTime;
-	
+	private Statement stmt;
+	private Connection c;
+	private int proccesing = 0;
+	Date lastTime;
+
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
-		
+
 		try {
-            Class.forName("org.postgresql.Driver");
-            c = DriverManager
-               .getConnection("jdbc:postgresql://localhost:5432/overlay",
-               "postgres", "Ac062002");
-            stmt = c.createStatement();
-        } catch (Exception e) {
-            System.err.println( e.getClass().getName()+": "+ e.getMessage() );
-            System.exit(0);
-         }
-		
+			Class.forName("org.postgresql.Driver");
+			c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/overlay", "postgres", "Ac062002");
+			stmt = c.createStatement();
+		} catch (Exception e) {
+			System.err.println(e.getClass().getName() + ": " + e.getMessage());
+			System.exit(0);
+		}
+
 		getLastTimeIfExists();
-		
+
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				
+
 				timer.scheduleAtFixedRate(new TimerTask() {
-					
+
 					@Override
 					public void run() {
-						
+
 						checkAndUpdate();
-						
+
 					}
 				}, 0, 15000);
 			}
-		}).run();		
+		}).run();
 	}
 
+	@SuppressWarnings("deprecation")
 	private void getLastTimeIfExists() {
-		
+
 		String sql = "select * from data order by \"Date\" DESC, \"EndTime\" DESC";
 		try {
 			ResultSet rs = stmt.executeQuery(sql);
-			
-			if(!rs.next()) {
+
+			if (!rs.next()) {
 				return;
-			}else {
+			} else {
 				Date date = rs.getDate("Date");
 				Time time = rs.getTime("EndTime");
-				lastTime = new Date(date.getYear(), date.getMonth(),
-						date.getDate(), time.getHours(), time.getMinutes(),
+				lastTime = new Date(date.getYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes(),
 						time.getSeconds());
 			}
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -100,24 +97,21 @@ public class ContextListener implements ServletContextListener{
 
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
-        System.out.println("destroyed");
-        try {
-        	stmt.close();
+		System.out.println("destroyed");
+		try {
+			stmt.close();
 			c.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		stopping = true;
 		timer.cancel();
 	}
-	
+
 	private void checkAndUpdate() {
-        System.out.println("listening");
-        if (lastTime != null) {
-			System.out.println(lastTime.toString());
-		}
+		System.out.println("listening");
 		if (stopping) {
 			timer.cancel();
 		} else {
@@ -125,54 +119,50 @@ public class ContextListener implements ServletContextListener{
 			if (!dir.exists()) {
 				dir.mkdir();
 			}
-			
+
 			File[] files = dir.listFiles();
-			
+
 			if (files != null) {
 				for (File file : files) {
 					if (file.getName().endsWith(".xls")) {
 
-						getEntrys(file.getName()).forEach(e ->{
+						getEntrys(file.getName()).forEach(e -> {
 							proccesEntry(e);
-							
+
 						});
 
 						moveFileToBackup(file.getName());
 					}
-					
-					
+
 				}
 			}
 		}
 	}
-	
 
-    private void proccesEntry(Entry e) {
-    	
-    	if (proccesing == 0) {
+	@SuppressWarnings("deprecation")
+	private void proccesEntry(Entry e) {
+
+		if (proccesing == 0) {
 			System.out.println("processing");
 			proccesing++;
 		}
-    	Date checkDate = e.getDate();
-    	checkDate.setHours(e.getEndTime().getHour());
-    	checkDate.setMinutes(e.getEndTime().getMinute());
-    	checkDate.setSeconds(e.getEndTime().getSecond());
+		Date checkDate = e.getDate();
+		checkDate.setHours(e.getEndTime().getHour());
+		checkDate.setMinutes(e.getEndTime().getMinute());
+		checkDate.setSeconds(e.getEndTime().getSecond());
 
-    	if (e.getDate().compareTo(lastTime) <= 0) {
-    		System.out.println("to early");
+		if (e.getDate().compareTo(lastTime) <= 0 && makeTime != true) {
 			return;
 		}
-        
-        String sql = "INSERT INTO data (\"CamName\",\"Date\",\"StartTime\",\"EndTime\","
-        +" \"TotalIn\", \"totalout\", \"personsin\","
-        +" \"personsout\", \"unknownin\", \"unknownout\") "
-           + "VALUES ('"+e.getCamName()+"', TO_DATE('"+
-     		   new SimpleDateFormat("dd.MM.yyyy").format(e.getDate())
-     		   +"','DD.MM.YYYY'), '"+e.getStartTime()+"','"+e.getEndTime()
-     		   +"',"+e.getTotalIn()+","+e.getTotalOut()+","+e.getPersonsIn()
-     		   +","+e.getPersonsOut()+","+e.getUnknownIn()+","+e.getUnknownOut()+");";
 
-        try {
+		String sql = "INSERT INTO data (\"CamName\",\"Date\",\"StartTime\",\"EndTime\","
+				+ " \"TotalIn\", \"totalout\", \"personsin\"," + " \"personsout\", \"unknownin\", \"unknownout\") "
+				+ "VALUES ('" + e.getCamName() + "', TO_DATE('" + new SimpleDateFormat("dd.MM.yyyy").format(e.getDate())
+				+ "','DD.MM.YYYY'), '" + e.getStartTime() + "','" + e.getEndTime() + "'," + e.getTotalIn() + ","
+				+ e.getTotalOut() + "," + e.getPersonsIn() + "," + e.getPersonsOut() + "," + e.getUnknownIn() + ","
+				+ e.getUnknownOut() + ");";
+
+		try {
 			stmt.executeUpdate(sql);
 		} catch (SQLException e1) {
 			e1.printStackTrace();
@@ -180,16 +170,17 @@ public class ContextListener implements ServletContextListener{
 	}
 
 	private int skipFirst = 0;
-    private int substingCounter = 1;
-    private boolean stop = false, makeTime = false;
-	private Collection<Entry> getEntrys(String fileName){
-		List<Entry> entrys = new ArrayList<Entry>();
-        System.out.println("getering");
+	private int substingCounter = 1;
+	private boolean stop = false, makeTime = false;
 
-		
-        Workbook workbook = null;
+	@SuppressWarnings("deprecation")
+	private Collection<Entry> getEntrys(String fileName) {
+		List<Entry> entrys = new ArrayList<Entry>();
+		System.out.println("getering");
+
+		Workbook workbook = null;
 		try {
-			workbook = WorkbookFactory.create(new File("xls/"+fileName));
+			workbook = WorkbookFactory.create(new File("xls/" + fileName));
 		} catch (EncryptedDocumentException e) {
 			e.printStackTrace();
 		} catch (InvalidFormatException e) {
@@ -197,106 +188,106 @@ public class ContextListener implements ServletContextListener{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		if (workbook == null) {
 			return null;
 		}
-		
-        Sheet sheet = workbook.getSheetAt(0);
-        DataFormatter dataFormatter = new DataFormatter();
-        
-        sheet.forEach(row -> {
-        	Entry entry = new Entry();
-        	
-    		if (dataFormatter.formatCellValue(row.getCell(0)).equals("Datum")) {
-    			stop = true;	
-    		}
-        	
-        	if (!stop && skipFirst != 0) {
-        		
-        		if (lastTime == null) {
+
+		Sheet sheet = workbook.getSheetAt(0);
+		DataFormatter dataFormatter = new DataFormatter();
+
+		sheet.forEach(row -> {
+			Entry entry = new Entry();
+
+			if (dataFormatter.formatCellValue(row.getCell(0)).equals("Datum")) {
+				stop = true;
+			}
+
+			if (!stop && skipFirst != 0) {
+
+				if (lastTime == null) {
 					lastTime = new Date();
 					makeTime = true;
 				}
-        		
-                row.forEach(cell -> {
-            		String cellValue = dataFormatter.formatCellValue(cell);
-            		if (substingCounter == 1) {
-            			entry.setCamName(cellValue);
-            		}else if (substingCounter == 2) {
-            			try {
-            				DateFormat format = new SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH);
-            				Date ddate;
-            				String date = cellValue.substring(0, 10);
-            				ddate = format.parse(date);
-            				entry.setDate(ddate);
-            				if (makeTime) {
-                				lastTime.setYear(ddate.getYear());
-                				lastTime.setMonth(ddate.getMonth());
-                				lastTime.setDate(ddate.getDate());
+
+				row.forEach(cell -> {
+					String cellValue = dataFormatter.formatCellValue(cell);
+					if (substingCounter == 1) {
+						entry.setCamName(cellValue);
+					} else if (substingCounter == 2) {
+						try {
+							DateFormat format = new SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH);
+							Date ddate;
+							String date = cellValue.substring(0, 10);
+							ddate = format.parse(date);
+							entry.setDate(ddate);
+							if (makeTime) {
+								lastTime.setYear(ddate.getYear());
+								lastTime.setMonth(ddate.getMonth());
+								lastTime.setDate(ddate.getDate());
 							}
-            			} catch (ParseException e) {
-            				e.printStackTrace();
-            			}
-            		}else if (substingCounter == 3) {
-            			String time = cellValue.substring(11, 19);
-            			LocalTime t = LocalTime.parse(time) ;
-            			entry.setEndTime(t);
-            			if (makeTime) {
+						} catch (ParseException e) {
+							e.printStackTrace();
+						}
+					} else if (substingCounter == 3) {
+						String time = cellValue.substring(11, 19);
+						LocalTime t = LocalTime.parse(time);
+						entry.setEndTime(t);
+						if (makeTime) {
 							lastTime.setHours(t.getHour());
 							lastTime.setMinutes(t.getMinute());
 							lastTime.setSeconds(t.getSecond());
 						}
-            			t = t.minusHours(1);
-            			entry.setStartTime(t);
-            		}else if (substingCounter == 4) {
-            			entry.setTotalIn(Integer.parseInt(cellValue));
-            		}else if (substingCounter == 5) {
-            			entry.setTotalOut(Integer.parseInt(cellValue));
-            		}else if (substingCounter == 6) {
-            			entry.setPersonsIn(Integer.parseInt(cellValue));
-            		}else if (substingCounter == 7) {
-            			entry.setPersonsOut(Integer.parseInt(cellValue));
-            		}else if (substingCounter == 8) {
-            			entry.setUnknownIn(Integer.parseInt(cellValue));
-            		}else if (substingCounter == 9) {
-            			entry.setUnknownOut(Integer.parseInt(cellValue));
-            		}
-            		substingCounter++;
-                });	
-                substingCounter = 1;
-            	entrys.add(entry);
+						t = t.minusHours(1);
+						entry.setStartTime(t);
+					} else if (substingCounter == 4) {
+						entry.setTotalIn(Integer.parseInt(cellValue));
+					} else if (substingCounter == 5) {
+						entry.setTotalOut(Integer.parseInt(cellValue));
+					} else if (substingCounter == 6) {
+						entry.setPersonsIn(Integer.parseInt(cellValue));
+					} else if (substingCounter == 7) {
+						entry.setPersonsOut(Integer.parseInt(cellValue));
+					} else if (substingCounter == 8) {
+						entry.setUnknownIn(Integer.parseInt(cellValue));
+					} else if (substingCounter == 9) {
+						entry.setUnknownOut(Integer.parseInt(cellValue));
+					}
+					substingCounter++;
+				});
+				substingCounter = 1;
+				entrys.add(entry);
 			}
-        	skipFirst = 1;
+			skipFirst = 1;
 
-        });  
-        try {
+		});
+		try {
 			workbook.close();
 			return entrys;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return null;
-        
+
 	}
-	
+
 	private void moveFileToBackup(String fileName) {
-        System.out.println("moving");
-        proccesing--;
-        stop = false;
-        makeTime = false;
-        
-		File file = new File("xls/"+fileName);
-		File newFile = new File("backup/xls/"+fileName);
+		System.out.println("moving");
+		proccesing--;
+		stop = false;
+		makeTime = false;
+
+		File file = new File("xls/" + fileName);
+		File newFile = new File("backup/xls/" + fileName);
 		if (!newFile.exists()) {
 			newFile.mkdirs();
 		}
 		try {
-			Files.move(file.toPath(),newFile.toPath(), REPLACE_EXISTING);
+			Files.move(file.toPath(), newFile.toPath(), REPLACE_EXISTING);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 }
