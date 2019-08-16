@@ -1,4 +1,4 @@
-package de.hofmann.Passantenfrequenz;
+package de.hofmann.Passantenfrequenz.ui;
 
 import com.vaadin.cdi.CDIView;
 import com.vaadin.cdi.access.JaasAccessControl;
@@ -12,13 +12,14 @@ import java.util.logging.Logger;
 
 import static com.vaadin.ui.Notification.Type.ERROR_MESSAGE;
 
+/**
+ * View to authenticate user
+ */
 @CDIView("login")
 public class LoginView extends LoginForm implements View {
 
 	private static final long serialVersionUID = 1L;
-	
-	public static final String VIEW_NAME = "login";
-	
+	static final String VIEW_NAME = "login";
     private static final Logger logger = Logger.getLogger(LoginView.class.getCanonicalName());
 
     @Override

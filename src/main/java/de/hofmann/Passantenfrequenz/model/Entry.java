@@ -1,15 +1,17 @@
-package de.hofmann.Passantenfrequenz.XLS;
+package de.hofmann.Passantenfrequenz.model;
 
 import java.time.LocalTime;
 
+/**
+ * Class Camera for data model of application
+ */
 public class Entry {
-	
+
 	private String camName;
 	private java.util.Date date;
 	private LocalTime startTime, endTime;
 	private int totalIn, totalOut, personsIn, personsOut, unknownIn, unknownOut;
-	
-	
+
 
 	public LocalTime getStartTime() {
 		return startTime;
