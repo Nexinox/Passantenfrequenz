@@ -2,10 +2,10 @@ package de.hofmann.Passantenfrequenz.dataacess;
 
 import java.sql.*;
 
-public class DatabaseClient implements IDatabaseClient {
+public class DatabaseClientImpl implements IDatabaseClient {
     private Connection c;
     private Statement stmt;
-    public DatabaseClient() {
+    public DatabaseClientImpl() {
         try {
             Class.forName("org.postgresql.Driver");
             c = DriverManager.getConnection("jdbc:postgresql://localhost:5432/overlay",

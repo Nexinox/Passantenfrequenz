@@ -11,7 +11,7 @@ import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.*;
-import de.hofmann.Passantenfrequenz.dataacess.DatabaseClient;
+import de.hofmann.Passantenfrequenz.dataacess.DatabaseClientImpl;
 import de.hofmann.Passantenfrequenz.model.Camera;
 import de.hofmann.Passantenfrequenz.model.Node;
 import org.json.simple.JSONArray;
@@ -50,12 +50,11 @@ public class FilterView extends VerticalLayout implements View {
 	private Image image;
 	private File file;
 	private int clicks = 0;
-    private DatabaseClient client;
-
+    private DatabaseClientImpl client;
 
     @Override
 	public void enter(ViewChangeListener.ViewChangeEvent viewChangeEvent) {
-        client = new DatabaseClient();
+        client = new DatabaseClientImpl();
         image = new Image("");
         image.addStyleName("maxSize800");
         File rsc = new File("rsc/");
@@ -135,7 +134,6 @@ public class FilterView extends VerticalLayout implements View {
 
 
 	}
-
 
     /**
      * @param earlyDate The start date of the query

@@ -18,7 +18,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 
-import de.hofmann.Passantenfrequenz.dataacess.DatabaseClient;
+import de.hofmann.Passantenfrequenz.dataacess.DatabaseClientImpl;
 import de.hofmann.Passantenfrequenz.model.Entry;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -32,7 +32,7 @@ public class ContextListener implements ServletContextListener {
 	private boolean stopping = false;
 	private int processing = 0;
 	private Date lastTime;
-	private DatabaseClient client;
+	private DatabaseClientImpl client;
 
 
     /**
@@ -40,7 +40,7 @@ public class ContextListener implements ServletContextListener {
      */
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
-	    client = new DatabaseClient();
+	    client = new DatabaseClientImpl();
 		getLastTimeIfExists();
         new Thread(() -> timer.scheduleAtFixedRate(new TimerTask() {
             @Override

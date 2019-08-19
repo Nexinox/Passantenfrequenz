@@ -175,7 +175,7 @@ public class AdminView extends VerticalLayout implements View {
 
 	    upload.addSucceededListener(receiver);
 
-	    addComponents(new HorizontalLayout(upload, saveBtn, imageWrapper));
+	    addComponents(new HorizontalLayout(upload, saveBtn), imageWrapper);
     }
 
     /**
