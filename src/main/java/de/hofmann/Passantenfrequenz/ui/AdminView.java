@@ -208,7 +208,6 @@ public class AdminView extends VerticalLayout implements View {
          }
     }
 
-
     /**
      * Receiver and SucceededListener implementation for upload
      */
@@ -255,7 +254,6 @@ public class AdminView extends VerticalLayout implements View {
 
     }
 
-
     /**
      * Updates the image draws cameras and helplines for aligning and calls createStreamResource
      * and adds one to global variable clicks when called
@@ -292,7 +290,7 @@ public class AdminView extends VerticalLayout implements View {
         image.setSource(createStreamResource());
 	}
 
-    /**
+	/**
      * @return StreamResource to set As Image source
      *
      * create StreamResource Using Global Variables bi BufferedImage

@@ -45,13 +45,13 @@ public class FilterView extends VerticalLayout implements View {
 
 	private Collection<Node> nodes = new ArrayList<>();
     private Collection<Camera> Cameras = new ArrayList<>();
-	private BufferedImage bi;
-	private Graphics2D drawable;
+	private BufferedImage bi, biFile;
+	private Graphics2D drawable, drawableFile;
 	private Image image;
 	private File file;
 	private int clicks = 0;
     private DatabaseClientImpl client;
-
+    private DateField startDate, endDate;
     @Override
 	public void enter(ViewChangeListener.ViewChangeEvent viewChangeEvent) {
         client = new DatabaseClientImpl();
@@ -65,31 +65,25 @@ public class FilterView extends VerticalLayout implements View {
         if(files != null) {
             for(File file : files) {
                 if(file.isFile()) {
-                    try {
-                        this.file = file;
-                        bi = ImageIO.read(file);
-                        drawable = bi.createGraphics();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    this.file = file;
                 }
             }
         }
 
         readJson();
 
-		DateField startDate = new DateField();
+		startDate = new DateField();
 		startDate.setCaption("Start Datum");
         startDate.setValue(LocalDate.now().minusDays(1));
-		DateField endDate = new DateField();
+		endDate = new DateField();
 		endDate.setCaption("End Datum");
         endDate.setValue(LocalDate.now());
 
 
-		TextField startTime = new TextField();
+        TextField startTime = new TextField();
 		startTime.setCaption("von");
 		startTime.setValue("00:00:00");
-		TextField endTime = new TextField();
+        TextField endTime = new TextField();
 		endTime.setCaption("bis");
 		endTime.setValue("00:00:00");
 
@@ -173,7 +167,7 @@ public class FilterView extends VerticalLayout implements View {
 			e.printStackTrace();
 		}
     }
-
+    private int totalIn, totalOut;
     /**
      * Redraws the image according to Nodes, Cameras and calls createStreamResource will also call one of
      * or both DrawText and DrawRotatedText and adds one to global variable clicks when called
@@ -181,21 +175,26 @@ public class FilterView extends VerticalLayout implements View {
     private void updateImage() {
 
         try {
-            bi = ImageIO.read(file);
+            biFile = ImageIO.read(file);
+            bi = new BufferedImage(biFile.getWidth(), biFile.getHeight()+30, BufferedImage.TYPE_INT_ARGB);
             drawable = bi.createGraphics();
+            drawableFile = biFile.createGraphics();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        drawable.setColor(Color.WHITE);
+        drawable.fillRect(0,0, bi.getWidth(), bi.getHeight());
+        drawable.setColor(Color.BLACK);
         for (Camera camera : Cameras) {
             Node node = new Node();
             for (Node node1 : nodes) if (camera.getName().equals(node1.getName())) node = node1;
-
+            totalIn += node.getIn();
+            totalOut += node.getOut();
             int barLength = 100;
 
             BufferedImage image = new BufferedImage(barLength + 40, 45, BufferedImage.TYPE_INT_ARGB);
 
             Graphics2D g2 = (Graphics2D) image.getGraphics();
-
 
             int[] xPointsRed = {
                 image.getWidth() / 2 - barLength / 2,
@@ -242,9 +241,19 @@ public class FilterView extends VerticalLayout implements View {
             at.rotate(Math.toRadians(camera.getRotationDeg()));
             at.translate(-image.getWidth() / 2, -image.getHeight() / 2);
 
-            drawable.drawImage(image, at, null);
+            drawableFile.drawImage(image, at, null);
         }
 
+        drawable.setFont(new Font(drawable.getFont().getFontName(), Font.BOLD, 24));
+        drawable.drawString("Passantenfrequenz", 0, 28);
+        drawable.setFont(new Font(drawable.getFont().getFontName(), Font.BOLD, 14));
+        drawable.drawString("Zeitraum: von "+startDate.getValue().toString()+" bis "+endDate.getValue().toString(), bi.getWidth()-280, 14);
+        drawable.drawString("Gesamt: hinein "+totalIn+" hinaus "+ totalOut, bi.getWidth()-280, 29);
+        drawable.drawImage(biFile, 0, 30, null);
+
+        totalOut = 0;
+        totalIn = 0;
+        nodes = new ArrayList<>();
         image.setSource(createStreamResource());
         clicks++;
     }
