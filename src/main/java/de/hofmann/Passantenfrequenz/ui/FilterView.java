@@ -139,7 +139,8 @@ public class FilterView extends VerticalLayout implements View {
      */
 	private void getEntrysInBetween(LocalDate earlyDate, LocalDate LaterDate, String earlyTime,
                                     String laterTime) {
-		String sql = String.format("SELECT * FROM data WHERE CONCAT(\"Date\",' ',\"StartTime\") >= '%s%s' AND CONCAT(\"Date\",' ',\"EndTime\") <  '%s%s'", earlyDate.toString(), earlyTime, LaterDate.toString(), laterTime);
+		String sql = String.format("SELECT * FROM data WHERE CONCAT(\"Date\",' ',\"StartTime\") >= '%s%s' AND CONCAT(\"Date\",' ',\"EndTime\") <  '%s%s'",
+            earlyDate.toString(), earlyTime, LaterDate.toString(), laterTime);
 
 		try {
             ResultSet rs = client.getBySql(sql);
@@ -247,8 +248,9 @@ public class FilterView extends VerticalLayout implements View {
         drawable.setFont(new Font(drawable.getFont().getFontName(), Font.BOLD, 24));
         drawable.drawString("Passantenfrequenz", 0, 28);
         drawable.setFont(new Font(drawable.getFont().getFontName(), Font.BOLD, 14));
-        drawable.drawString("Zeitraum: von "+startDate.getValue().toString()+" bis "+endDate.getValue().toString(), bi.getWidth()-280, 14);
-        drawable.drawString("Gesamt: hinein "+totalIn+" hinaus "+ totalOut, bi.getWidth()-280, 29);
+        drawable.drawString("Zeitraum: von "+startDate.getValue().toString()+" bis "
+            +endDate.getValue().toString(), bi.getWidth()-280, 14);
+        drawable.drawString("Gesamt: hinein "+totalIn+" hinaus "+ totalOut, bi.getWidth()-320, 29);
         drawable.drawImage(biFile, 0, 30, null);
 
         totalOut = 0;
@@ -269,7 +271,9 @@ public class FilterView extends VerticalLayout implements View {
     private void drawText(Node node, int barLength, BufferedImage image, Graphics2D g2) {
         BufferedImage text = new BufferedImage(barLength, 20, BufferedImage.TYPE_INT_ARGB);
         Graphics2D textDraw = (Graphics2D) text.getGraphics();
-        textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 16));
+        if (node.getIn() >= 10000 || node.getOut() >= 10000) {
+            textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 12));
+        }else textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 16));
         textDraw.setColor(Color.RED);
         textDraw.drawString(Integer.toString(node.getOut()), 0, 15);
         textDraw.setColor(Color.GREEN);
@@ -289,7 +293,9 @@ public class FilterView extends VerticalLayout implements View {
     private void drawRotatedText(Node node, int barLength, BufferedImage image, Graphics2D g2) {
         BufferedImage text = new BufferedImage(barLength, 20, BufferedImage.TYPE_INT_ARGB);
         Graphics2D textDraw = (Graphics2D) text.getGraphics();
-        textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 16));
+        if (node.getIn() >= 10000 || node.getOut() >= 10000) {
+            textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 12));
+        }else textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 16));
         textDraw.setColor(Color.RED);
         textDraw.drawString(Integer.toString(node.getOut()), text.getWidth() / 2, 15);
         textDraw.setColor(Color.GREEN);
