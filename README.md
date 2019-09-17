@@ -3,8 +3,8 @@
 # Installation
 
 Requirements:
-Wildfly 11-Final
-Java 8
+Wildfly 11-Final -
+Java 8 -
 PostgresSQL
 
 Download all files from latest Release.
