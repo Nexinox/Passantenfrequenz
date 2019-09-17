@@ -64,10 +64,10 @@ public class AdminView extends VerticalLayout implements View {
         upload.setButtonCaption("Bild Hochladen");
         Button saveBtn = new Button("Spechern");
 
-        File rsc = new File("rsc/");
-        if(!rsc.exists()) rsc.mkdir();
+        File rsc = new File("rsc/img/");
+        if(!rsc.exists()) rsc.mkdirs();
 
-        File[] files = new File("rsc/").listFiles((dir, name) -> name.endsWith(".png") || name.endsWith(".PNG"));
+        File[] files = new File("rsc/img/").listFiles((dir, name) -> name.endsWith(".png") || name.endsWith(".PNG"));
 
         if(files != null) for (File file : files)
             if (file.isFile()) {
@@ -161,7 +161,7 @@ public class AdminView extends VerticalLayout implements View {
 
 	        });
 
-	        try (FileWriter file = new FileWriter("cameras.json")) {
+	        try (FileWriter file = new FileWriter("rsc/cameras.json")) {
 
 	            file.write(cameraArray.toJSONString());
 	            file.flush();
@@ -184,7 +184,7 @@ public class AdminView extends VerticalLayout implements View {
     @SuppressWarnings("unchecked")
 	private void readJson() {
     	 JSONParser jsonParser = new JSONParser();
-         try (FileReader reader = new FileReader("cameras.json"))
+         try (FileReader reader = new FileReader("rsc/cameras.json"))
          {
              Object obj = jsonParser.parse(reader);
 
@@ -218,12 +218,12 @@ public class AdminView extends VerticalLayout implements View {
 
 			if(filename.endsWith(".png") || filename.endsWith(".PNG")) {
 	            FileOutputStream fos;
-	            File[] files = new File("rsc/").listFiles();
+	            File[] files = new File("rsc/img/").listFiles();
 
 	            try {
 	                if(files != null) for (File file : files)
                         if (file.isFile()) file.delete();
-	                file = new File("rsc/"+filename);
+	                file = new File("rsc/img/"+filename);
 	                fos = new FileOutputStream(file);
 	            } catch (final java.io.FileNotFoundException e) {
 	                new Notification("failed",

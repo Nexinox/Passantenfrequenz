@@ -90,7 +90,7 @@ public class ContextListener implements ServletContextListener {
 		if (stopping) {
 			timer.cancel();
 		} else {
-			File dir = new File("xls/");
+			File dir = new File("rsc/xls/");
 			if (!dir.exists()) {
 				dir.mkdir();
 			}
@@ -154,7 +154,7 @@ public class ContextListener implements ServletContextListener {
 
 		Workbook workbook = null;
 		try {
-			workbook = WorkbookFactory.create(new File("xls/" + fileName));
+			workbook = WorkbookFactory.create(new File("rsc/xls/" + fileName));
 		} catch (EncryptedDocumentException | InvalidFormatException | IOException e) {
 			e.printStackTrace();
 		}
@@ -257,8 +257,8 @@ public class ContextListener implements ServletContextListener {
 		stop = false;
 		makeTime = false;
 
-		File file = new File("xls/" + fileName);
-		File newFile = new File("backup/xls/" + fileName);
+		File file = new File("rsc/xls/" + fileName);
+		File newFile = new File("rsc/backup/xls/" + fileName);
 		if (!newFile.exists()) newFile.mkdirs();
 		try {
 			Files.move(file.toPath(), newFile.toPath(), REPLACE_EXISTING);

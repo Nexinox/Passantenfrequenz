@@ -57,10 +57,10 @@ public class FilterView extends VerticalLayout implements View {
         client = new DatabaseClientImpl();
         image = new Image("");
         image.addStyleName("maxSize800");
-        File rsc = new File("rsc/");
-        if(!rsc.exists()) rsc.mkdir();
+        File rsc = new File("rsc/img/");
+        if(!rsc.exists()) rsc.mkdirs();
 
-        File[] files = new File("rsc/").listFiles((dir, name) -> name.endsWith(".png") || name.endsWith(".PNG"));
+        File[] files = new File("rsc/img/").listFiles((dir, name) -> name.endsWith(".png") || name.endsWith(".PNG"));
 
         if(files != null) {
             for(File file : files) {
@@ -336,7 +336,7 @@ public class FilterView extends VerticalLayout implements View {
     private void readJson() {
         JSONParser jsonParser = new JSONParser();
 
-        try (FileReader reader = new FileReader("cameras.json"))
+        try (FileReader reader = new FileReader("rsc/cameras.json"))
         {
 
             Object obj = jsonParser.parse(reader);
