@@ -10,7 +10,7 @@ PostgresSQL
 Download all files from latest Release.
 in pgadmin wich comes packaged with postgresql create a database named overlay.
 execute sql code found in data.sql as query in pgadmin.
-create a rsc folder in wildfly/bin folder and copy the provided databaseConfig.txt file into it and edit it as needed (fill in PostgresSQL username and password).
+create a rsc folder in wildfly/bin folder and create a file named databaseConfig.txt and edit it, fill in PostgresSQL username and password in this order and in seperate lines.
 put the war file into wildfly/standalone/deployments folder.
 
 add a admin and a normal user using wildfly/bin/add-user.bat.
