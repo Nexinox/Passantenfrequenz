@@ -22,8 +22,8 @@ the admin user has to have groups "admins, users".
 and the user only "users".
 repeat until wanted number of users exist.
 
-start wildfly and open localhost:8080/"name of war file minus the .war" log in as admin user and make needed configurations.
-put .xls tabels into wildfly/bin/rsc/cls folder that will read it into the database and back it up.
+start wildfly and open localhost:8080/"name of war file minus the .war". log in as admin user and make needed configurations.
+put .xls tabels into wildfly/bin/rsc/xls folder that will read it into the database and back it up.
 
 # Usage 
 login as normal user/ admin select time and hit start.
