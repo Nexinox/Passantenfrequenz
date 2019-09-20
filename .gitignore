@@ -25,4 +25,4 @@ hs_err_pid*
 target/
 
 
-/src/main/webapp/VAADIN/themes/
+/src/main/webapp/VAADIN/
