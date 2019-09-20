@@ -1,5 +1,6 @@
 package de.hofmann.Passantenfrequenz.ui;
 
+import com.vaadin.annotations.JavaScript;
 import com.vaadin.cdi.CDIView;
 import com.vaadin.cdi.access.JaasAccessControl;
 import com.vaadin.navigator.View;
@@ -27,14 +28,18 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.sql.ResultSet;
+import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 
 /**
  * Main View for filtering the entrys and displaying them
  */
 @SuppressWarnings("ResultOfMethodCallIgnored")
+@JavaScript({"vaadin://themes/print.min.js", "vaadin://themes/main.js"})
 @CDIView(FilterView.VIEW_NAME)
 @RolesAllowed({ "admins", "users" })
 public class FilterView extends VerticalLayout implements View {
@@ -52,11 +57,15 @@ public class FilterView extends VerticalLayout implements View {
 	private int clicks = 0;
     private DatabaseClientImpl client;
     private DateField startDate, endDate;
+    private boolean printButtonVisible = false;
+    private Color green = new Color(0, 153, 51);
+    Button printMainImage;
     @Override
 	public void enter(ViewChangeListener.ViewChangeEvent viewChangeEvent) {
         client = new DatabaseClientImpl();
         image = new Image("");
         image.addStyleName("maxSize800");
+        image.setId("mainImg");
         File rsc = new File("rsc/img/");
         if(!rsc.exists()) rsc.mkdirs();
 
@@ -86,7 +95,10 @@ public class FilterView extends VerticalLayout implements View {
         TextField endTime = new TextField();
 		endTime.setCaption("bis");
 		endTime.setValue("00:00:00");
-
+        printMainImage = new Button("Print", e->{
+            com.vaadin.ui.JavaScript.getCurrent().execute("printImg()");
+        });
+        printMainImage.setVisible(printButtonVisible);
 		Button filterBtn = new Button("Start");
 		filterBtn.addClickListener(e -> getEntrysInBetween(startDate.getValue(),
             endDate.getValue(), startTime.getValue(), endTime.getValue()));
@@ -120,7 +132,7 @@ public class FilterView extends VerticalLayout implements View {
         optLay.setSizeFull();
 
 		addComponents(optLay,
-				new HorizontalLayout(new VerticalLayout(startDate, endDate, filterBtn),
+				new HorizontalLayout(new VerticalLayout(startDate, endDate, filterBtn, printMainImage),
 						new VerticalLayout(new HorizontalLayout(startTime, Uhr1),
                             new HorizontalLayout(endTime, Uhr2)), image));
 
@@ -224,7 +236,7 @@ public class FilterView extends VerticalLayout implements View {
                 barLength / 2, 10);
             g2.fillPolygon(xPointsRed, yPointsRed, 3);
 
-            g2.setColor(Color.GREEN);
+            g2.setColor(green);
             g2.fillRect(image.getWidth() / 2,
                 image.getHeight() / 2 - 5, barLength / 2,
                 10);
@@ -242,15 +254,24 @@ public class FilterView extends VerticalLayout implements View {
             at.rotate(Math.toRadians(camera.getRotationDeg()));
             at.translate(-image.getWidth() / 2, -image.getHeight() / 2);
 
+            if (!printButtonVisible){
+                printButtonVisible = true;
+                printMainImage.setVisible(printButtonVisible);
+            }
+
             drawableFile.drawImage(image, at, null);
         }
 
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("dd.MM.yy");
+
+
         drawable.setFont(new Font(drawable.getFont().getFontName(), Font.BOLD, 24));
-        drawable.drawString("Passantenfrequenz", 0, 28);
+        drawable.drawString("Passantenfrequenz", 10, 28);
         drawable.setFont(new Font(drawable.getFont().getFontName(), Font.BOLD, 14));
-        drawable.drawString("Zeitraum: von "+startDate.getValue().toString()+" bis "
-            +endDate.getValue().toString(), bi.getWidth()-280, 14);
-        drawable.drawString("Gesamt: hinein "+totalIn+" hinaus "+ totalOut, bi.getWidth()-320, 29);
+        String zeitraum = "Zeitraum von "+startDate.getValue().format(df)+" bis " +endDate.getValue().format(df);
+        drawable.drawString(zeitraum , bi.getWidth()-drawable.getFontMetrics(drawable.getFont()).stringWidth(zeitraum), 14);
+        String gesamt = "Gesamt "+ NumberFormat.getInstance(Locale.GERMANY).format(totalIn)+" hinein  "+ NumberFormat.getInstance(Locale.GERMANY).format(totalOut)+" hinaus ";
+        drawable.drawString(gesamt, bi.getWidth()-drawable.getFontMetrics(drawable.getFont()).stringWidth(gesamt), 29);
         drawable.drawImage(biFile, 0, 30, null);
 
         totalOut = 0;
@@ -275,9 +296,9 @@ public class FilterView extends VerticalLayout implements View {
             textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 12));
         }else textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 16));
         textDraw.setColor(Color.RED);
-        textDraw.drawString(Integer.toString(node.getOut()), 0, 15);
-        textDraw.setColor(Color.GREEN);
-        textDraw.drawString(Integer.toString(node.getIn()), text.getWidth() / 2, 15);
+        textDraw.drawString(NumberFormat.getInstance(Locale.GERMANY).format(node.getOut()), 0, 15);
+        textDraw.setColor(green);
+        textDraw.drawString(NumberFormat.getInstance(Locale.GERMANY).format(node.getIn()), text.getWidth() / 2, 15);
 
         g2.drawImage(text, image.getWidth()/2-barLength/2, 0, null);
     }
@@ -297,9 +318,9 @@ public class FilterView extends VerticalLayout implements View {
             textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 12));
         }else textDraw.setFont(new Font(textDraw.getFont().getFontName(), Font.BOLD, 16));
         textDraw.setColor(Color.RED);
-        textDraw.drawString(Integer.toString(node.getOut()), text.getWidth() / 2, 15);
-        textDraw.setColor(Color.GREEN);
-        textDraw.drawString(Integer.toString(node.getIn()), 0, 15);
+        textDraw.drawString(NumberFormat.getInstance(Locale.GERMANY).format(node.getOut()), text.getWidth() / 2, 15);
+        textDraw.setColor(green);
+        textDraw.drawString(NumberFormat.getInstance(Locale.GERMANY).format(node.getIn()), 0, 15);
 
         AffineTransform at = new AffineTransform();
 

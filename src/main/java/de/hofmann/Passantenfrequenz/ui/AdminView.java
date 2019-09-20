@@ -48,7 +48,8 @@ public class AdminView extends VerticalLayout implements View {
 	private Camera camera;
 	private File file;
 	private boolean isOpen = false;
-
+    private Color green = new Color(0, 153, 51);
+    private int scaledWidth = 1139, scaledHeight = 762;
     @SuppressWarnings("unchecked")
 	@Override
     public void enter(ViewChangeListener.ViewChangeEvent viewChangeEvent) {
@@ -242,7 +243,19 @@ public class AdminView extends VerticalLayout implements View {
         }
 
         public void uploadSucceeded(SucceededEvent event) {
-        	try {
+
+            try {
+                BufferedImage origBi = ImageIO.read(file);
+                BufferedImage scaledBi = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
+                scaledBi.getGraphics().drawImage(origBi, 0, 0, scaledWidth, scaledHeight, null);
+                file.delete();
+                ImageIO.write(scaledBi, "png", file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            try {
 				bi = ImageIO.read(file);
 				drawable = bi.createGraphics();
 			} catch (IOException e) {
@@ -275,7 +288,7 @@ public class AdminView extends VerticalLayout implements View {
 
             g2.setColor(Color.RED);
             g2.fillRect(0, 0, image.getWidth() / 2, 3);
-            g2.setColor(Color.GREEN);
+            g2.setColor(green);
             g2.fillRect(image.getWidth() / 2, 0, image.getWidth() / 2, 3);
 
             AffineTransform at = new AffineTransform();

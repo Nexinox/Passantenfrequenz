@@ -14,8 +14,8 @@ import javax.inject.Inject;
  * Main Ui of application handles navigating and authentication
  */
 @CDIUI("")
-@Theme("jaasexampletheme")
-public class JaasExampleUI extends UI {
+@Theme("Passantenfrequenztheme")
+public class PassantenfrequenzUI extends UI {
 
 	private static final long serialVersionUID = 1L;
 	@Inject
